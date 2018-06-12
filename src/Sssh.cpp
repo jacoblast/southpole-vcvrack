@@ -59,7 +59,7 @@ void Sssh::step() {
 
 		// Gaussian noise generator
 		// TO DO: check correlation between calls
-		float noise = 5.0 * randomNormal();
+		float noise = 2.0 * randomNormal();
 
 		if ( i==0 ) {
 			trig[0] = inputs[TRIG1_INPUT].normalize(0);
@@ -67,13 +67,15 @@ void Sssh::step() {
 		else {
 			trig[i] = inputs[TRIG1_INPUT+i].normalize(trig[i-1]);
 		}
-
-		in[i]  = inputs[SH1_INPUT+i].normalize(noise);
+		
+		// normalize s+h's to input above if patched, otherwise noise
+		
+		in[i]  = i==0 ? inputs[SH1_INPUT].normalize(noise) : inputs[SH1_INPUT+i].normalize(in[i-1]);
 
 		if (trigger[i].process(trig[i])) {
-			sample[i] = inputs[SH1_INPUT+i].normalize(noise);
+			sample[i] = i==0 ? inputs[SH1_INPUT].normalize(noise) : inputs[SH1_INPUT+i].normalize(in[i-1]);
 		}
-		
+
 		// lights
 		lights[SH_POS1_LIGHT+2*i].setBrightness(fmaxf(0.0, sample[i] / 5.0));
 		lights[SH_NEG1_LIGHT+2*i].setBrightness(fmaxf(0.0, -sample[i] / 5.0));
